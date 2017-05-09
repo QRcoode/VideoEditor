@@ -2,6 +2,7 @@ package Processing;
 
 import java.io.File;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
+import org.bytedeco.javacv.FrameFilter.Exception;
 import org.bytedeco.javacv.*;
 
 public class VideoProcessor {
@@ -10,10 +11,16 @@ public class VideoProcessor {
 	private FFmpegFrameRecorder videoRecorder;
 	private FFmpegFrameGrabber videoGrab;
 	private File Directory;
+	private File video;
     
 	public VideoProcessor(String filename) {
-		File file = new File(filename);
-		videoGrab = new FFmpegFrameGrabber(file);
+		video = new File(filename);
+		videoGrab = new FFmpegFrameGrabber(video);
+		try {
+			videoGrab.start();
+		} catch (org.bytedeco.javacv.FrameGrabber.Exception e) {
+			e.printStackTrace();
+		}
 		getDirectory();
 	}
 	
@@ -27,6 +34,11 @@ public class VideoProcessor {
 	public void initializeFilter(String Filter) {
 		// Set the FFmpeg effect/filter that will be applied
 		filter = new FFmpegFrameFilter(Filter, videoGrab.getImageWidth(), videoGrab.getImageHeight());
+		try {
+			filter.start();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	private void initVideoRecorder(String path) {
@@ -43,10 +55,9 @@ public class VideoProcessor {
 	public void start() {
 		Frame frame;
 		try {
-        	
+			System.out.println("Starting to process video: " + video.getName() + ".....");
             String path = Directory + "/video" + System.currentTimeMillis() + ".mov";
-            initVideoRecorder(path);
-            filter.start();
+            initVideoRecorder(path);    
             
             System.out.println("There is " +videoGrab.getAudioChannels() + " audio channel");
             
@@ -64,6 +75,7 @@ public class VideoProcessor {
             videoRecorder.release();
             videoGrab.stop();
             videoGrab.release();
+            System.out.println("Finished processing video: " + video.getName() + ".....");
         } catch (FrameGrabber.Exception e) {
             e.printStackTrace();
         } catch (FrameRecorder.Exception e) {
