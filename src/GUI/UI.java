@@ -1,22 +1,12 @@
 package GUI; 
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Container; 
-import java.awt.FlowLayout; 
-import java.awt.GridLayout; 
-import java.awt.event.ActionEvent; 
-import java.awt.event.ActionListener;
+import java.awt.*;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-
+import java.io.*;
+import javax.swing.*;
+import javax.media.*;
 import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JButton; 
-import javax.swing.JFrame; 
-import javax.swing.JLabel; 
-import javax.swing.JPanel;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -36,11 +26,14 @@ public class UI extends JFrame implements Runnable {
     private JButton buttonPlayStop, buttonPlay, buttonNormal, buttonPluginGray, buttonPluginSepia, buttonPluginInvert, 
                     buttonPluginPixelize, buttonThresholding, buttonPluginHalftone, buttonPluginMinimum, 
                     buttonPluginMaximum, buttonPluginFlip, buttonPluginTelevision, buttonPluginEdgeDetector,
-                    buttonPluginDifference;
+                    buttonPluginDifference, buttonOpenFile;
     private JLabel labelCurrentFilter;
     private Thread  thread; 
     private int vidWidth, vidHeight;
     private boolean playing;
+    private File file;
+    private BufferedImage pic;
+    private Container container;
     
     public UI(){ 
          
@@ -85,7 +78,8 @@ public class UI extends JFrame implements Runnable {
         // Buttons 
         ButtonHandler l_handler = new ButtonHandler();
         buttonPlay = new JButton("Play");
-        buttonPlayStop = new JButton("Stop"); 
+        buttonPlayStop = new JButton("Stop");
+        buttonOpenFile = new JButton("Open file");
         buttonNormal = new JButton("Normal"); 
         buttonPluginGray = new JButton("Gray Scale"); 
         buttonPluginSepia = new JButton("Sepia"); 
@@ -101,7 +95,8 @@ public class UI extends JFrame implements Runnable {
         buttonPluginDifference = new JButton("Difference"); 
         
         buttonPlay.addActionListener(l_handler); 
-        buttonPlayStop.addActionListener(l_handler); 
+        buttonPlayStop.addActionListener(l_handler);
+        buttonOpenFile.addActionListener(l_handler);
         buttonPluginGray.addActionListener(l_handler); 
         buttonNormal.addActionListener(l_handler); 
         buttonPluginSepia.addActionListener(l_handler); 
@@ -120,6 +115,7 @@ public class UI extends JFrame implements Runnable {
         panelButton = new JPanel(); 
         panelButton.add(buttonPlay);
         panelButton.add(buttonPlayStop);
+        panelButton.add(buttonOpenFile);
          
         filterOptions = new JPanel(); 
         filterOptions.setLayout(new GridLayout(15,1)); 
@@ -137,37 +133,64 @@ public class UI extends JFrame implements Runnable {
         filterOptions.add(buttonPluginEdgeDetector); 
         filterOptions.add(buttonPluginDifference);
         
-        // Adding a picture for now instead of an video
-        BufferedImage pic = null;
-		try {
-			pic = ImageIO.read(new File("blank.jpg"));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-        JLabel picLabel = new JLabel(new ImageIcon(pic));
-        
+        pic = null;
         
         panelLabels = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panelLabels.add(labelCurrentFilter); 
          
         panelCenter = new JPanel(new BorderLayout());
-        panelCenter.add(picLabel, BorderLayout.NORTH);
         panelCenter.add(panelButton, BorderLayout.SOUTH);
         panelCenter.add(panelLabels, BorderLayout.CENTER);
         
-        
-        Container container = getContentPane(); 
+        container = getContentPane(); 
         container.setLayout(new BorderLayout()); 
         container.add(panelCenter, BorderLayout.CENTER);
         container.add(filterOptions, BorderLayout.WEST);
         
-        vidHeight = pic.getHeight();
-        vidWidth = pic.getWidth();
+        vidHeight = 480;
+        vidWidth = 480;
         
         setSize(vidWidth+125,vidHeight+100); 
-        setResizable(true); 
+        setResizable(false); 
         setVisible(true); 
-    } 
+    }
+  
+    private void openFile()
+    {      
+       JFileChooser fileChooser = new JFileChooser();
+  
+       fileChooser.setFileSelectionMode(
+          JFileChooser.FILES_ONLY );
+       int result = fileChooser.showOpenDialog( this );
+  
+       // user clicked Cancel button on dialog
+       if ( result == JFileChooser.CANCEL_OPTION ) {
+          file = null;
+       } else {
+          file = fileChooser.getSelectedFile();
+          try {
+  			pic = ImageIO.read(file);
+  		} catch (IOException e) {
+  			e.printStackTrace();
+  		}
+         
+         panelCenter = new JPanel(new BorderLayout());
+         JLabel picLabel = new JLabel(new ImageIcon(pic));
+         panelCenter.add(picLabel, BorderLayout.NORTH);
+         panelCenter.add(panelButton, BorderLayout.SOUTH);
+         panelCenter.add(panelLabels, BorderLayout.CENTER);
+         
+         container.removeAll();;  
+         container.setLayout(new BorderLayout()); 
+         container.add(panelCenter, BorderLayout.CENTER);
+         container.add(filterOptions, BorderLayout.WEST);
+         vidHeight = pic.getHeight();
+         vidWidth = pic.getWidth();
+         
+         setSize(vidWidth+125,vidHeight+100);
+       }
+       
+    }
      
     public void run(){ 
         while(true){             
@@ -199,7 +222,9 @@ public class UI extends JFrame implements Runnable {
                 if(playing){ 
                     playing = false;                      
                 } 
-            } 
+            } else if (a_event.getSource() == buttonOpenFile) {
+            	openFile();
+            }
             else if(a_event.getSource() == buttonNormal){ 
                 //pluginImage = null; 
                 labelCurrentFilter.setText("Current filter: None"); 
