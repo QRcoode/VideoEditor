@@ -5,19 +5,13 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import javax.swing.*;
+
+import org.bytedeco.javacpp.opencv_core.Mat;
+import org.bytedeco.javacpp.opencv_videoio.VideoCapture;
 import javax.media.*;
 import javax.imageio.ImageIO;
+import javafx.*;
 
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
-import javafx.scene.media.MediaView;
-import javafx.scene.paint.Color;
-import javafx.stage.Stage; 
 
 public class UI extends JFrame implements Runnable {
      
@@ -34,8 +28,10 @@ public class UI extends JFrame implements Runnable {
     private File file;
     private BufferedImage pic;
     private Container container;
+    private ImageIcon image;
+    private VideoCapture vid;
     
-    public UI(){ 
+    public UI() { 
          
         loadGUI(); 
          
@@ -69,7 +65,7 @@ public class UI extends JFrame implements Runnable {
       
     }
      
-    private void loadGUI(){
+    private void loadGUI() {
         setTitle("Video Editor"); 
         
         // Labels
@@ -155,70 +151,72 @@ public class UI extends JFrame implements Runnable {
         setVisible(true); 
     }
   
-    private void openFile()
-    {      
-       JFileChooser fileChooser = new JFileChooser();
-  
-       fileChooser.setFileSelectionMode(
-          JFileChooser.FILES_ONLY );
-       int result = fileChooser.showOpenDialog( this );
-  
-       // user clicked Cancel button on dialog
-       if ( result == JFileChooser.CANCEL_OPTION ) {
-          file = null;
-       } else {
-          file = fileChooser.getSelectedFile();
-          try {
-  			pic = ImageIO.read(file);
-  		} catch (IOException e) {
-  			e.printStackTrace();
-  		}
-         
-         panelCenter = new JPanel(new BorderLayout());
-         JLabel picLabel = new JLabel(new ImageIcon(pic));
-         panelCenter.add(picLabel, BorderLayout.NORTH);
-         panelCenter.add(panelButton, BorderLayout.SOUTH);
-         panelCenter.add(panelLabels, BorderLayout.CENTER);
-         
-         container.removeAll();;  
-         container.setLayout(new BorderLayout()); 
-         container.add(panelCenter, BorderLayout.CENTER);
-         container.add(filterOptions, BorderLayout.WEST);
-         vidHeight = pic.getHeight();
-         vidWidth = pic.getWidth();
-         
-         setSize(vidWidth+125,vidHeight+100);
-       }
-       
+    private void openFile() {      
+		JFileChooser fileChooser = new JFileChooser();
+		  
+		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		int result = fileChooser.showOpenDialog( this );
+		  
+		if ( result == JFileChooser.CANCEL_OPTION ) {
+		// If the user clicks cancel
+		file = null;
+		} else {
+			// If the user chooses a file
+			file = fileChooser.getSelectedFile();
+			try {
+				pic = ImageIO.read(file);
+				if(pic != null) {
+					panelCenter = new JPanel(new BorderLayout());
+					image = new ImageIcon(pic);
+					JLabel picLabel = new JLabel(image);
+					panelCenter.add(picLabel, BorderLayout.NORTH);
+					panelCenter.add(panelButton, BorderLayout.SOUTH);
+					panelCenter.add(panelLabels, BorderLayout.CENTER);
+					 
+					container.removeAll();;  
+					container.setLayout(new BorderLayout()); 
+					container.add(panelCenter, BorderLayout.CENTER);
+					container.add(filterOptions, BorderLayout.WEST);
+					vidHeight = pic.getHeight();
+					vidWidth = pic.getWidth();
+					setSize(vidWidth+125,vidHeight+100);
+				} else {
+					System.out.println("You did not select an image file");
+				}
+			} catch (IOException e) {
+				System.out.println("You did not select an image file");
+			}
+		}  
     }
      
-    public void run(){ 
+    public void run() { 
         while(true){             
-                if(playing) 
-                {
-                    /*imageIn = videoInterface.getFrame(); 
-                    MarvinImage.copyColorArray(imageIn, imageOut); 
-                     
-                    if(pluginImage == null || rect){ 
-                        MarvinImage.copyColorArray(imageIn, imageOut); 
-                    } 
-                 
-                    if(pluginImage != null){                     
-                        pluginImage.process(imageIn, imageOut, null, imageMask, false);
-                    } 
-                    imageOut.update(); 
-                    videoPanel.setImage(imageOut); */
-                } 
-            }  
-    } 
+            if(playing) 
+            {
+                
+            } 
+        }  
+    }
+    
+    public void ShowVidFrame() {
+    	Mat mat = new Mat();
+    	vid = new VideoCapture(file.getAbsolutePath());
+        vid.open(file.getAbsolutePath());
+    	vid.grab();
+    	vid.retrieve(mat);
+
+      //  Highgui.imwrite(System.getProperty("user.dir")+ "temp.jpg", mat);
+        ImageIcon image = new ImageIcon(System.getProperty("user.dir")+ "temp.jpg");
+        JLabel label = new JLabel("", image, JLabel.CENTER);
+    }
      
-    private class ButtonHandler implements ActionListener{
-        public void actionPerformed(ActionEvent a_event){ 
-        	if (a_event.getSource() == buttonPlay){
+    private class ButtonHandler implements ActionListener {
+        public void actionPerformed(ActionEvent a_event) { 
+        	if (a_event.getSource() == buttonPlay) {
         		if(!playing){ 
                     playing = true;                      
                 } 
-        	} else if(a_event.getSource() == buttonPlayStop){ 
+        	} else if(a_event.getSource() == buttonPlayStop) {
                 if(playing){ 
                     playing = false;                      
                 } 
@@ -226,58 +224,42 @@ public class UI extends JFrame implements Runnable {
             	openFile();
             }
             else if(a_event.getSource() == buttonNormal){ 
-                //pluginImage = null; 
                 labelCurrentFilter.setText("Current filter: None"); 
             } 
-            else if(a_event.getSource() == buttonPluginGray){ 
-                //pluginImage = MarvinPluginLoader.loadImagePlugin("org.marvinproject.image.color.grayScale.jar"); 
+            else if(a_event.getSource() == buttonPluginGray){  
                 labelCurrentFilter.setText("Current filter: Gray Scale"); 
             } 
             else if(a_event.getSource() == buttonPluginSepia){ 
-                //pluginImage = MarvinPluginLoader.loadImagePlugin("org.marvinproject.image.color.sepia.jar"); 
                 labelCurrentFilter.setText("Current filter: Sepia"); 
             } 
             else if(a_event.getSource() == buttonPluginInvert){ 
-                //pluginImage = MarvinPluginLoader.loadImagePlugin("org.marvinproject.image.color.invert.jar"); 
                 labelCurrentFilter.setText("Current filter: Negative"); 
             } 
-            else if(a_event.getSource() == buttonPluginPixelize){ 
-                //pluginImage = MarvinPluginLoader.loadImagePlugin("org.marvinproject.image.blur.pixelize.jar"); 
+            else if(a_event.getSource() == buttonPluginPixelize){  
                 labelCurrentFilter.setText("Current filter: Pixelize"); 
             } 
-            else if(a_event.getSource() == buttonThresholding){ 
-                //pluginImage = MarvinPluginLoader.loadImagePlugin("org.marvinproject.image.color.thresholding.jar"); 
+            else if(a_event.getSource() == buttonThresholding){  
                 labelCurrentFilter.setText("Current filter: Thresholding"); 
             } 
             else if(a_event.getSource() == buttonPluginHalftone){ 
-                //pluginImage = MarvinPluginLoader.loadImagePlugin("org.marvinproject.image.halftone.dithering.jar"); 
                 labelCurrentFilter.setText("Current filter: Halftone"); 
             } 
             else if(a_event.getSource() == buttonPluginMinimum){ 
-                //pluginImage = MarvinPluginLoader.loadImagePlugin("org.marvinproject.image.statistical.minimum.jar"); 
-                //pluginImage.setAttribute("size", 2); 
                 labelCurrentFilter.setText("Current filter: Minimum"); 
             } 
             else if(a_event.getSource() == buttonPluginMaximum){ 
-                //pluginImage = MarvinPluginLoader.loadImagePlugin("org.marvinproject.image.statistical.maximum.jar"); 
-                //pluginImage.setAttribute("size", 2); 
                 labelCurrentFilter.setText("Current filter: Maximum"); 
             } 
             else if(a_event.getSource() == buttonPluginFlip){ 
-                //pluginImage = MarvinPluginLoader.loadImagePlugin("org.marvinproject.image.transform.flip.jar"); 
                 labelCurrentFilter.setText("Current filter: Flip"); 
             } 
-            else if(a_event.getSource() == buttonPluginTelevision){ 
-                //pluginImage = MarvinPluginLoader.loadImagePlugin("org.marvinproject.image.artistic.television.jar"); 
+            else if(a_event.getSource() == buttonPluginTelevision){  
                 labelCurrentFilter.setText("Current filter: Television"); 
             } 
-            else if(a_event.getSource() == buttonPluginEdgeDetector){ 
-                //pluginImage = MarvinPluginLoader.loadImagePlugin("org.marvinproject.image.edge.edgeDetector.jar");                 
+            else if(a_event.getSource() == buttonPluginEdgeDetector){                  
                 labelCurrentFilter.setText("Current filter: Edge Detector"); 
             }     
-            else if(a_event.getSource() == buttonPluginDifference){ 
-                //pluginImage = MarvinPluginLoader.loadImagePlugin("org.marvinproject.image.difference.differenceColor.jar"); 
-                //pluginImage.setAttribute("comparisonImage", imageLastFrame); 
+            else if(a_event.getSource() == buttonPluginDifference){  
                 labelCurrentFilter.setText("Current filter: Difference"); 
             } 
         } 
