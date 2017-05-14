@@ -8,15 +8,21 @@ import javax.swing.*;
 
 import org.bytedeco.javacpp.opencv_core.Mat;
 import org.bytedeco.javacpp.opencv_videoio.VideoCapture;
-import javax.media.*;
 import javax.imageio.ImageIO;
 import javafx.*;
+import javafx.application.Platform;
+import javafx.embed.swing.JFXPanel;
+import javafx.scene.Scene;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import javafx.scene.media.MediaView;
 
 
 public class UI extends JFrame implements Runnable {
      
     // GUI 
-    private JPanel panelButton, filterOptions, panelCenter, panelLabels; 
+    private JPanel panelButton, filterOptions, panelVideoButtons, panelLabels; 
     private JButton buttonPlayStop, buttonPlay, buttonNormal, buttonPluginGray, buttonPluginSepia, buttonPluginInvert, 
                     buttonPluginPixelize, buttonThresholding, buttonPluginHalftone, buttonPluginMinimum, 
                     buttonPluginMaximum, buttonPluginFlip, buttonPluginTelevision, buttonPluginEdgeDetector,
@@ -31,38 +37,19 @@ public class UI extends JFrame implements Runnable {
     private ImageIcon image;
     private VideoCapture vid;
     
-    public UI() { 
-         
-        loadGUI(); 
-         
+    //---@Rain---
+    
+    //---@Rain---
+    
+    
+    
+    public UI() {      
+        loadGUI();      
         thread = new Thread(this);
         thread.start();
-        playing = false;
-        
+        playing = false; 
         setLayout(new BorderLayout());
-        
-        // COULD TRY JAVA FX INSTEAD OF SWING
-    	
-    	/*Media media = new Media(new File("AHS.mp4").toURI().toString());
-
-        MediaPlayer mediaPlayer = new MediaPlayer(media);
-        mediaPlayer.setAutoPlay(true);
-        MediaView mediaView = new MediaView(mediaPlayer);
-
-        BorderPane borderPane = new BorderPane();
-        borderPane.setCenter(mediaView);
-        borderPane.setBottom(addToolBar());
-
-        borderPane.setStyle("-fx-background-color: Black");
-
-        Scene scene = new Scene(borderPane, 600, 600);
-        scene.setFill(Color.BLACK);*/
-
-        //primaryStage.setTitle("Media Player!");
-        //primaryStage.setScene(scene);
-       // primaryStage.show();
-
-      
+ 
     }
      
     private void loadGUI() {
@@ -134,17 +121,46 @@ public class UI extends JFrame implements Runnable {
         panelLabels = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panelLabels.add(labelCurrentFilter); 
          
-        panelCenter = new JPanel(new BorderLayout());
-        panelCenter.add(panelButton, BorderLayout.SOUTH);
-        panelCenter.add(panelLabels, BorderLayout.CENTER);
+        
+        //=== commented by @Rain===
+        panelVideoButtons = new JPanel(new BorderLayout());
+        panelVideoButtons.add(panelButton, BorderLayout.SOUTH);
+        panelVideoButtons.add(panelLabels, BorderLayout.CENTER);
+        panelVideoButtons.setSize(200, 200);
+        
+        
+        
+        
+
+        final JFXPanel panelPlayer = new JFXPanel();
+        
+        Media media = new Media("file:///E:/mv.mp4");
+        MediaPlayer player = new MediaPlayer(media);
+        MediaView view = new MediaView(player);
+        BorderPane root = new BorderPane();
+        root.getChildren().add(view);
+        Scene scene = new Scene(root, 500, 500, true);
+        Platform.runLater(new Runnable() {
+            @Override 
+            public void run() {
+            	panelPlayer.setSize(1000,1000);
+            	panelPlayer.setScene(scene);
+                    
+            }
+          });
+        
+        player.play();
+        
+        
         
         container = getContentPane(); 
         container.setLayout(new BorderLayout()); 
-        container.add(panelCenter, BorderLayout.CENTER);
         container.add(filterOptions, BorderLayout.WEST);
+        container.add(panelPlayer, BorderLayout.CENTER);
+        container.add(panelVideoButtons, BorderLayout.SOUTH);
         
-        vidHeight = 480;
-        vidWidth = 480;
+        vidHeight = 400;
+        vidWidth = 720;
         
         setSize(vidWidth+125,vidHeight+100); 
         setResizable(false); 
@@ -166,16 +182,16 @@ public class UI extends JFrame implements Runnable {
 			try {
 				pic = ImageIO.read(file);
 				if(pic != null) {
-					panelCenter = new JPanel(new BorderLayout());
+					panelVideoButtons = new JPanel(new BorderLayout());
+					final JFXPanel panelPlayer = new JFXPanel();
 					image = new ImageIcon(pic);
 					JLabel picLabel = new JLabel(image);
-					panelCenter.add(picLabel, BorderLayout.NORTH);
-					panelCenter.add(panelButton, BorderLayout.SOUTH);
-					panelCenter.add(panelLabels, BorderLayout.CENTER);
-					 
+					panelVideoButtons.add(picLabel, BorderLayout.NORTH);
+					panelVideoButtons.add(panelButton, BorderLayout.SOUTH);
+					panelVideoButtons.add(panelLabels, BorderLayout.CENTER);
 					container.removeAll();;  
 					container.setLayout(new BorderLayout()); 
-					container.add(panelCenter, BorderLayout.CENTER);
+					container.add(panelVideoButtons, BorderLayout.CENTER);
 					container.add(filterOptions, BorderLayout.WEST);
 					vidHeight = pic.getHeight();
 					vidWidth = pic.getWidth();
