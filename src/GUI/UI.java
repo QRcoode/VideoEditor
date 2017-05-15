@@ -38,7 +38,9 @@ public class UI extends JFrame implements Runnable {
     private VideoCapture vid;
     
     //---@Rain---
-    
+    private Media media;
+    private MediaPlayer player;
+    private MediaView view;
     //---@Rain---
     
     
@@ -93,7 +95,9 @@ public class UI extends JFrame implements Runnable {
         buttonPluginTelevision.addActionListener(l_handler); 
         buttonPluginEdgeDetector.addActionListener(l_handler); 
         buttonPluginDifference.addActionListener(l_handler); 
-         
+        
+        
+
         // Panels 
         panelButton = new JPanel(); 
         panelButton.add(buttonPlay);
@@ -122,68 +126,70 @@ public class UI extends JFrame implements Runnable {
         panelLabels.add(labelCurrentFilter); 
          
         
-        //=== commented by @Rain===
+
         panelVideoButtons = new JPanel(new BorderLayout());
         panelVideoButtons.add(panelButton, BorderLayout.SOUTH);
         panelVideoButtons.add(panelLabels, BorderLayout.CENTER);
         panelVideoButtons.setSize(200, 200);
         
-        
-        
-        
-
-        final JFXPanel panelPlayer = new JFXPanel();
-        
-        Media media = new Media("file:///E:/mv.mp4");
-        MediaPlayer player = new MediaPlayer(media);
-        MediaView view = new MediaView(player);
-        BorderPane root = new BorderPane();
-        root.getChildren().add(view);
-        Scene scene = new Scene(root, 500, 500, true);
-        Platform.runLater(new Runnable() {
-            @Override 
-            public void run() {
-            	panelPlayer.setSize(1000,1000);
-            	panelPlayer.setScene(scene);
-                    
-            }
-          });
-        
-        player.play();
-        
-        
-        
         container = getContentPane(); 
         container.setLayout(new BorderLayout()); 
+        
         container.add(filterOptions, BorderLayout.WEST);
-        container.add(panelPlayer, BorderLayout.CENTER);
         container.add(panelVideoButtons, BorderLayout.SOUTH);
         
+
         vidHeight = 400;
         vidWidth = 720;
         
         setSize(vidWidth+125,vidHeight+100); 
         setResizable(false); 
         setVisible(true); 
+        
+        
     }
   
-    private void openFile() {      
+    private void openFile(JFXPanel panelPlayer) {      
 		JFileChooser fileChooser = new JFileChooser();
-		  
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		int result = fileChooser.showOpenDialog( this );
 		  
 		if ( result == JFileChooser.CANCEL_OPTION ) {
 		// If the user clicks cancel
-		file = null;
+			file = null;
 		} else {
 			// If the user chooses a file
 			file = fileChooser.getSelectedFile();
+			media = new Media(file.toURI().toString());
+	        player = new MediaPlayer(media);
+	        view = new MediaView(player);
+	        BorderPane root = new BorderPane();
+	        root.getChildren().add(view);
+	        Scene scene = new Scene(root, 500, 500, true);
+	        Platform.runLater(new Runnable() {
+	            @Override 
+	            public void run() {
+	            	panelPlayer.setSize(1000,1000);
+	            	panelPlayer.setScene(scene);
+	                    
+	            }
+	          });
+	       
+	        
+	        
+	        container.add(panelPlayer, BorderLayout.CENTER);
+
+	        
+	        
+			
+			/*
 			try {
+				
+				
 				pic = ImageIO.read(file);
 				if(pic != null) {
 					panelVideoButtons = new JPanel(new BorderLayout());
-					final JFXPanel panelPlayer = new JFXPanel();
+
 					image = new ImageIcon(pic);
 					JLabel picLabel = new JLabel(image);
 					panelVideoButtons.add(picLabel, BorderLayout.NORTH);
@@ -202,6 +208,11 @@ public class UI extends JFrame implements Runnable {
 			} catch (IOException e) {
 				System.out.println("You did not select an image file");
 			}
+			*/
+			
+			
+			
+			
 		}  
     }
      
@@ -230,14 +241,18 @@ public class UI extends JFrame implements Runnable {
         public void actionPerformed(ActionEvent a_event) { 
         	if (a_event.getSource() == buttonPlay) {
         		if(!playing){ 
-                    playing = true;                      
+                    playing = true;  
+                    player.play();
                 } 
         	} else if(a_event.getSource() == buttonPlayStop) {
                 if(playing){ 
-                    playing = false;                      
+                    playing = false;       
+                    player.stop();
                 } 
             } else if (a_event.getSource() == buttonOpenFile) {
-            	openFile();
+            	System.out.println("opening file");
+            	final JFXPanel panelPlayer = new JFXPanel(); 
+            	openFile(panelPlayer);
             }
             else if(a_event.getSource() == buttonNormal){ 
                 labelCurrentFilter.setText("Current filter: None"); 
