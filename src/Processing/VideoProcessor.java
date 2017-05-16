@@ -1,12 +1,20 @@
 package Processing;
 
 import java.io.File;
+
+import javax.swing.JOptionPane;
+import javax.swing.SwingWorker;
+
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FrameFilter.Exception;
+
+import GUI.UI;
+
 import org.bytedeco.javacpp.avcodec;
 import org.bytedeco.javacv.*;
+import Processing.VideoProcessor;
 
-public class VideoProcessor {
+public class VideoProcessor extends SwingWorker<Void, Integer> {
 	
 	private FFmpegFrameFilter filter;
 	private FFmpegFrameRecorder videoRecorder;
@@ -14,8 +22,11 @@ public class VideoProcessor {
 	private File Directory;
 	private File video;
 	private String ext;
+	private Long startTime;
+	private UI ui;
     
-	public VideoProcessor(String filename) {
+	public VideoProcessor(String filename, UI ui) {
+		this.ui = ui;
 		video = new File(filename);
 		videoGrab = new FFmpegFrameGrabber(video.getAbsolutePath());
 		ext = getFileExtension(filename);
@@ -69,6 +80,21 @@ public class VideoProcessor {
 		return extension;
 	}
 	
+	
+	@Override
+	protected Void doInBackground() throws Exception {
+		start();
+		return null;
+	}
+	
+	@Override
+	protected void done() {
+		long time = System.currentTimeMillis() - startTime;
+		System.out.println("Video filtering took " + (time/1000) + " seconds.");
+		ui.updateLabel("");
+		JOptionPane.showMessageDialog(ui, "Finished Saving Video\nTime taken: " + (time/1000) + " seconds.");	
+	}
+
 	public void start() {
 		Frame frame;
 		try {
@@ -76,7 +102,7 @@ public class VideoProcessor {
             String path = Directory + "/video" + System.currentTimeMillis() + "." + ext;
             initVideoRecorder(path);    
             
-            Long startTime = System.currentTimeMillis();
+            startTime = System.currentTimeMillis();
             System.out.println("There is " + videoGrab.getAudioChannels() + " audio channel");
             
             while (videoGrab.grab() != null) {
@@ -96,8 +122,8 @@ public class VideoProcessor {
             videoGrab.stop();
             videoGrab.release();
             System.out.println("Finished processing video: " + video.getName() + ".....");
-            Long endTime = System.currentTimeMillis();
-            System.out.println("Video filtering took " + ((endTime.doubleValue()-startTime.doubleValue())/1000) + " seconds.");
+            long currentThreadID = Thread.currentThread().getId();
+    	    System.out.println("-- Thread "+currentThreadID+ " finished processing video: " + video.getName());
         } catch (FrameGrabber.Exception e) {
             e.printStackTrace();
         } catch (FrameRecorder.Exception e) {
@@ -106,4 +132,15 @@ public class VideoProcessor {
             e.printStackTrace();
         }
 	}
+	
+	public static void performIO(int i) {
+		try {
+			Thread.sleep(i);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	    long currentThreadID = Thread.currentThread().getId();
+	    System.out.println("** Thread "+currentThreadID+ " finished IO("+i+")"); 
+	}
+	
 }

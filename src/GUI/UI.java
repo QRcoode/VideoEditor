@@ -8,6 +8,9 @@ import javax.swing.*;
 
 import org.bytedeco.javacpp.opencv_core.Mat;
 import org.bytedeco.javacpp.opencv_videoio.VideoCapture;
+
+import Processing.VideoProcessor;
+
 import javax.media.*;
 import javax.imageio.ImageIO;
 import javafx.*;
@@ -20,8 +23,8 @@ public class UI extends JFrame implements Runnable {
     private JButton buttonPlayStop, buttonPlay, buttonNormal, buttonPluginGray, buttonPluginSepia, buttonPluginInvert, 
                     buttonPluginPixelize, buttonThresholding, buttonPluginHalftone, buttonPluginMinimum, 
                     buttonPluginMaximum, buttonPluginFlip, buttonPluginTelevision, buttonPluginEdgeDetector,
-                    buttonPluginDifference, buttonOpenFile;
-    private JLabel labelCurrentFilter;
+                    buttonPluginDifference, buttonOpenFile, buttonSave;
+    private JLabel labelCurrentFilter, labelProcessing;
     private Thread  thread; 
     private int vidWidth, vidHeight;
     private boolean playing;
@@ -30,9 +33,12 @@ public class UI extends JFrame implements Runnable {
     private Container container;
     private ImageIcon image;
     private VideoCapture vid;
+    private VideoProcessor processor;
+    private String filter;
+    private UI ui;
     
     public UI() { 
-         
+        ui = this;
         loadGUI(); 
          
         thread = new Thread(this);
@@ -70,12 +76,14 @@ public class UI extends JFrame implements Runnable {
         
         // Labels
         labelCurrentFilter = new JLabel("Current filter: None");
+        labelProcessing = new JLabel("");
          
         // Buttons 
         ButtonHandler l_handler = new ButtonHandler();
         buttonPlay = new JButton("Play");
         buttonPlayStop = new JButton("Stop");
         buttonOpenFile = new JButton("Open file");
+        buttonSave = new JButton("Save");
         buttonNormal = new JButton("Normal"); 
         buttonPluginGray = new JButton("Gray Scale"); 
         buttonPluginSepia = new JButton("Sepia"); 
@@ -93,6 +101,7 @@ public class UI extends JFrame implements Runnable {
         buttonPlay.addActionListener(l_handler); 
         buttonPlayStop.addActionListener(l_handler);
         buttonOpenFile.addActionListener(l_handler);
+        buttonSave.addActionListener(l_handler);
         buttonPluginGray.addActionListener(l_handler); 
         buttonNormal.addActionListener(l_handler); 
         buttonPluginSepia.addActionListener(l_handler); 
@@ -112,6 +121,7 @@ public class UI extends JFrame implements Runnable {
         panelButton.add(buttonPlay);
         panelButton.add(buttonPlayStop);
         panelButton.add(buttonOpenFile);
+        panelButton.add(buttonSave);
          
         filterOptions = new JPanel(); 
         filterOptions.setLayout(new GridLayout(15,1)); 
@@ -132,7 +142,8 @@ public class UI extends JFrame implements Runnable {
         pic = null;
         
         panelLabels = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panelLabels.add(labelCurrentFilter); 
+        panelLabels.add(labelCurrentFilter);
+        panelLabels.add(labelProcessing);
          
         panelCenter = new JPanel(new BorderLayout());
         panelCenter.add(panelButton, BorderLayout.SOUTH);
@@ -143,12 +154,12 @@ public class UI extends JFrame implements Runnable {
         container.add(panelCenter, BorderLayout.CENTER);
         container.add(filterOptions, BorderLayout.WEST);
         
-        vidHeight = 480;
-        vidWidth = 480;
+        vidHeight = 640;
+        vidWidth = 640;
         
         setSize(vidWidth+125,vidHeight+100); 
         setResizable(false); 
-        setVisible(true); 
+        setVisible(true);
     }
   
     private void openFile() {      
@@ -206,8 +217,12 @@ public class UI extends JFrame implements Runnable {
     	vid.retrieve(mat);
 
       //  Highgui.imwrite(System.getProperty("user.dir")+ "temp.jpg", mat);
-        ImageIcon image = new ImageIcon(System.getProperty("user.dir")+ "temp.jpg");
-        JLabel label = new JLabel("", image, JLabel.CENTER);
+    }
+    
+    public void updateLabel(String text) {
+    	labelProcessing.setText(text);
+		panelLabels.validate();
+        panelLabels.repaint();
     }
      
     private class ButtonHandler implements ActionListener {
@@ -222,15 +237,32 @@ public class UI extends JFrame implements Runnable {
                 } 
             } else if (a_event.getSource() == buttonOpenFile) {
             	openFile();
+            } else if (a_event.getSource() == buttonSave) {
+            	if (file == null) {
+            		JOptionPane.showMessageDialog(ui, "You have not selected a file yet.");
+            	} else {
+            		if (filter == null) {
+            			JOptionPane.showMessageDialog(ui, "You have not selected a filter.");
+            		} else {
+            			updateLabel("Saving Video......");
+            			processor = new VideoProcessor(file.getName(), ui);
+            			// Need to add shared filter that changes when you push the filter buttons
+            			processor.initializeFilter(filter);
+            			processor.execute();
+            		}
+            	}
             }
             else if(a_event.getSource() == buttonNormal){ 
-                labelCurrentFilter.setText("Current filter: None"); 
+                labelCurrentFilter.setText("Current filter: None");
+                filter = null;
             } 
             else if(a_event.getSource() == buttonPluginGray){  
-                labelCurrentFilter.setText("Current filter: Gray Scale"); 
+                labelCurrentFilter.setText("Current filter: Gray Scale");
+                filter = "colorchannelmixer=.3:.4:.3:0:.3:.4:.3:0:.3:.4:.3";
             } 
             else if(a_event.getSource() == buttonPluginSepia){ 
-                labelCurrentFilter.setText("Current filter: Sepia"); 
+                labelCurrentFilter.setText("Current filter: Sepia");
+                filter = "colorchannelmixer=.393:.769:.189:0:.349:.686:.168:0:.272:.534:.131";
             } 
             else if(a_event.getSource() == buttonPluginInvert){ 
                 labelCurrentFilter.setText("Current filter: Negative"); 
