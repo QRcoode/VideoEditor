@@ -1,7 +1,14 @@
 package Processing;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 
+import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 
@@ -43,6 +50,33 @@ public class VideoProcessor extends SwingWorker<Void, Integer> {
         if (!Directory.exists()) {
             Directory.mkdirs();
         }
+	}
+	
+	public BufferedImage getFirstFrame(File file) {
+		BufferedImage pic = null;
+		FFmpegFrameGrabber grabFrame = new FFmpegFrameGrabber(file.getAbsolutePath());
+		String filepath = System.getProperty("user.dir") + "/image.jpg";
+		try {
+			grabFrame.start();
+			FFmpegFrameRecorder recordFrame = new FFmpegFrameRecorder(filepath ,grabFrame.getImageWidth(), grabFrame.getImageHeight());
+			recordFrame.start();
+			Frame frame = grabFrame.grabImage();
+			recordFrame.record(frame,grabFrame.getPixelFormat());
+			grabFrame.stop();
+			grabFrame.release();
+			recordFrame.stop();
+			recordFrame.release();
+		} catch (org.bytedeco.javacv.FrameRecorder.Exception | org.bytedeco.javacv.FrameGrabber.Exception e1) {
+			e1.printStackTrace();
+		}
+		File image = new File(filepath);
+		try {
+			pic = ImageIO.read(image);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return pic;
 	}
 	
 	public void initializeFilter(String Filter) {
@@ -106,14 +140,14 @@ public class VideoProcessor extends SwingWorker<Void, Integer> {
             System.out.println("There is " + videoGrab.getAudioChannels() + " audio channel");
             
             while (videoGrab.grab() != null) {
-                frame = videoGrab.grabFrame();
+                frame = videoGrab.grabImage();
               
                 if (frame != null) {
-                    //filter.push(frame);
-                    //Frame filterFrame;
-                    //filterFrame = filter.pull();
+                    filter.push(frame);
+                    Frame filterFrame;
+                    filterFrame = filter.pull();
                     videoRecorder.setTimestamp(videoGrab.getTimestamp());
-                    videoRecorder.record(frame, videoGrab.getPixelFormat());
+                    videoRecorder.record(filterFrame, videoGrab.getPixelFormat());
                 }
             }
             filter.stop();
