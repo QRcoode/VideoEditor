@@ -1,12 +1,27 @@
 package Processing;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+
+import javax.imageio.ImageIO;
+import javax.swing.JOptionPane;
+import javax.swing.SwingWorker;
+
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FrameFilter.Exception;
+
+import GUI.UI;
+
 import org.bytedeco.javacpp.avcodec;
 import org.bytedeco.javacv.*;
+import Processing.VideoProcessor;
 
-public class VideoProcessor {
+public class VideoProcessor extends SwingWorker<Void, Integer> {
 	
 	private FFmpegFrameFilter filter;
 	private FFmpegFrameRecorder videoRecorder;
@@ -14,8 +29,11 @@ public class VideoProcessor {
 	private File Directory;
 	private File video;
 	private String ext;
+	private Long startTime;
+	private UI ui;
     
-	public VideoProcessor(String filename) {
+	public VideoProcessor(String filename, UI ui) {
+		this.ui = ui;
 		video = new File(filename);
 		videoGrab = new FFmpegFrameGrabber(video.getAbsolutePath());
 		ext = getFileExtension(filename);
@@ -32,6 +50,33 @@ public class VideoProcessor {
         if (!Directory.exists()) {
             Directory.mkdirs();
         }
+	}
+	
+	public BufferedImage getFirstFrame(File file) {
+		BufferedImage pic = null;
+		FFmpegFrameGrabber grabFrame = new FFmpegFrameGrabber(file.getAbsolutePath());
+		String filepath = System.getProperty("user.dir") + "/image.jpg";
+		try {
+			grabFrame.start();
+			FFmpegFrameRecorder recordFrame = new FFmpegFrameRecorder(filepath ,grabFrame.getImageWidth(), grabFrame.getImageHeight());
+			recordFrame.start();
+			Frame frame = grabFrame.grabImage();
+			recordFrame.record(frame,grabFrame.getPixelFormat());
+			grabFrame.stop();
+			grabFrame.release();
+			recordFrame.stop();
+			recordFrame.release();
+		} catch (org.bytedeco.javacv.FrameRecorder.Exception | org.bytedeco.javacv.FrameGrabber.Exception e1) {
+			e1.printStackTrace();
+		}
+		File image = new File(filepath);
+		try {
+			pic = ImageIO.read(image);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return pic;
 	}
 	
 	public void initializeFilter(String Filter) {
@@ -69,6 +114,21 @@ public class VideoProcessor {
 		return extension;
 	}
 	
+	
+	@Override
+	protected Void doInBackground() throws Exception {
+		start();
+		return null;
+	}
+	
+	@Override
+	protected void done() {
+		long time = System.currentTimeMillis() - startTime;
+		System.out.println("Video filtering took " + (time/1000) + " seconds.");
+		ui.updateLabel("");
+		JOptionPane.showMessageDialog(ui, "Finished Saving Video\nTime taken: " + (time/1000) + " seconds.");	
+	}
+
 	public void start() {
 		Frame frame;
 		try {
@@ -76,18 +136,18 @@ public class VideoProcessor {
             String path = Directory + "/video" + System.currentTimeMillis() + "." + ext;
             initVideoRecorder(path);    
             
-            Long startTime = System.currentTimeMillis();
+            startTime = System.currentTimeMillis();
             System.out.println("There is " + videoGrab.getAudioChannels() + " audio channel");
             
             while (videoGrab.grab() != null) {
-                frame = videoGrab.grabFrame();
+                frame = videoGrab.grabImage();
               
                 if (frame != null) {
-                    //filter.push(frame);
-                    //Frame filterFrame;
-                    //filterFrame = filter.pull();
+                    filter.push(frame);
+                    Frame filterFrame;
+                    filterFrame = filter.pull();
                     videoRecorder.setTimestamp(videoGrab.getTimestamp());
-                    videoRecorder.record(frame, videoGrab.getPixelFormat());
+                    videoRecorder.record(filterFrame, videoGrab.getPixelFormat());
                 }
             }
             filter.stop();
@@ -96,8 +156,8 @@ public class VideoProcessor {
             videoGrab.stop();
             videoGrab.release();
             System.out.println("Finished processing video: " + video.getName() + ".....");
-            Long endTime = System.currentTimeMillis();
-            System.out.println("Video filtering took " + ((endTime.doubleValue()-startTime.doubleValue())/1000) + " seconds.");
+            long currentThreadID = Thread.currentThread().getId();
+    	    System.out.println("-- Thread "+currentThreadID+ " finished processing video: " + video.getName());
         } catch (FrameGrabber.Exception e) {
             e.printStackTrace();
         } catch (FrameRecorder.Exception e) {
@@ -106,4 +166,15 @@ public class VideoProcessor {
             e.printStackTrace();
         }
 	}
+	
+	public static void performIO(int i) {
+		try {
+			Thread.sleep(i);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	    long currentThreadID = Thread.currentThread().getId();
+	    System.out.println("** Thread "+currentThreadID+ " finished IO("+i+")"); 
+	}
+	
 }
