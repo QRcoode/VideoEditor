@@ -1,0 +1,157 @@
+package GUI;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.io.File;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+import java.util.ArrayList;
+
+import controllers.*;
+import pt.runtime.TaskIDGroup;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+import java.util.*;
+
+public class SimpleGUI extends JFrame implements ActionListener {
+	
+	private JButton btnGo = new JButton("Go!");
+	private JButton btnCheckResponsiveness = new JButton("Responsive?");
+	
+	private FilterProcessor processor;
+	
+	private ArrayList<String> a = new ArrayList<String>();
+	private Iterator<String> subVideoNames;
+	
+	public SimpleGUI() {
+		super("Simple GUI example");
+		setSize(400, 300);
+		btnGo.addActionListener(this);
+		btnCheckResponsiveness.addActionListener(this);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		add(btnGo, BorderLayout.SOUTH);
+		add(btnCheckResponsiveness, BorderLayout.CENTER);
+		
+
+	}
+	
+	public void done() {
+		JOptionPane.showMessageDialog(SimpleGUI.this, "Finished!");
+	}
+	
+	public void addFilter(FilterProcessor processor, String filter) {
+		
+		processor.initializeFilter(filter); 
+		processor.start();
+		
+	}
+	
+	public void actionPerformed(ActionEvent e) {
+		
+		
+		if (e.getSource() == btnCheckResponsiveness) 
+		{
+			btnCheckResponsiveness.setBackground(new Color((int)(Math.random()*256), (int)(Math.random()*256), (int)(Math.random()*256)));
+		} else 
+		{
+
+			try{
+				splitVideo("mv.mp4").hasCompleted();
+				getVideoFiles();		    
+			    //addFilterToSubVideos();
+			    //VideoCombiner vc = new VideoCombiner();
+			    //vc.combine();	
+			}
+			catch(Exception ee){		
+			}
+		}
+	}
+	
+	public static void main(String[] agrs){
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				SimpleGUI frame = new SimpleGUI();
+				frame.setVisible(true);
+			}
+		});
+	}
+	
+	
+	//TASK(4) public void addFilterToSubVideos()
+	TASK(4) public void addFilterToSubVideos()
+	{
+		long startTime = System.currentTimeMillis();	
+		String filter = "colorchannelmixer=.3:.4:.3:0:.3:.4:.3:0:.3:.4:.3";
+		while(subVideoNames.hasNext())
+			addFilter(new FilterProcessor("SubVideos/" + subVideoNames.next()),filter);
+		long endTime   = System.currentTimeMillis();
+		long totalTime = endTime - startTime;
+		System.out.println("Duration: " + totalTime + " ms");
+	}
+	
+	
+	TASK(4) public void splitVideo(String fileName) throws IOException
+	{
+		VideoSpliter vs = new VideoSpliter(fileName); 
+		//========= Splitting Video Start ============
+    	//--------calculation--------
+    	String duration = vs.getVideoDuration("mv.mp4");  // The video name
+    	int durationInMs = vs.transferDuration(duration);
+    	int partitionedInMs = vs.partition(durationInMs, 4);
+    	String partitionedDur = vs.transferMsToDuration(partitionedInMs);
+    	//---------working-----------
+    	Iterator<String> it = vs.generateCommandLines(4, partitionedInMs, partitionedDur).iterator();
+    	vs.doRealSplittingWork(it);
+    	//========= Splitting Video End ==============
+	}
+	
+	TASK public void getVideoFiles() throws IOException
+	{
+		
+		System.out.println("start");
+		
+
+		/*while(true)
+		{
+
+			if(Files.list(Paths.get("SubVideos")).count() == 4)
+				break;
+			else
+				System.out.println(Files.list(Paths.get("SubVideos")).count());
+			
+			
+		}*/
+		
+		File[] listOfFiles = new File("SubVideos").listFiles();
+		ArrayList<String> videoNames = new ArrayList<String>();
+		for(File listOfFile : listOfFiles){
+			if (listOfFile.isFile()) 
+			{
+				videoNames.add(listOfFile.getName());
+				System.out.println(listOfFile.getName());
+			}
+		        
+			
+		}
+		subVideoNames = videoNames.iterator();
+		
+
+	}
+	
+	
+	public void donee() {
+		
+		System.out.println("isEDT?");
+	}
+	
+	TASK public void doWork() {
+		System.out.println("asfdfasdfasdf");
+	}
+}
