@@ -17,7 +17,7 @@ public class VideoCombiner {
 	{
 		try {
 			convertVideoToTsFormat();
-			checkTsFilesAreExisting();
+			//checkTsFilesAreExisting();
 			runCombineProcessBuilder();
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
@@ -28,14 +28,14 @@ public class VideoCombiner {
 	
 	public void convertVideoToTsFormat() throws IOException
 	{
-		while(true)
+		/*while(true)
 		{
 			if(Files.list(Paths.get("Edited Video")).count() == 4)
 				break;
 			else
 				System.out.println("Edited Videoooo: " + Files.list(Paths.get("Edited Video")).count());	
-		}
-		File[] filteredVideos = new File("Edited Video").listFiles();		
+		}*/
+		File[] filteredVideos = new File("EditedVideo").listFiles();		
 		for(File filteredVideo: filteredVideos) 
 		{	
 			try {

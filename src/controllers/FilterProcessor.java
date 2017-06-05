@@ -52,7 +52,7 @@ public class FilterProcessor{
 	}
 	
 	private void getDirectory() {
-		Directory = new File(System.getProperty("user.dir") + "/Edited Video/");
+		Directory = new File(System.getProperty("user.dir") + "/EditedVideo/");
         if (!Directory.exists()) {
             Directory.mkdirs();
         }
