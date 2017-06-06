@@ -17,8 +17,6 @@ public class VideoCombiner {
 	{
 		try {
 			convertVideoToTsFormat();
-			//checkTsFilesAreExisting();
-			runCombineProcessBuilder();
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -28,13 +26,6 @@ public class VideoCombiner {
 	
 	public void convertVideoToTsFormat() throws IOException
 	{
-		/*while(true)
-		{
-			if(Files.list(Paths.get("Edited Video")).count() == 4)
-				break;
-			else
-				System.out.println("Edited Videoooo: " + Files.list(Paths.get("Edited Video")).count());	
-		}*/
 		File[] filteredVideos = new File("EditedVideo").listFiles();		
 		for(File filteredVideo: filteredVideos) 
 		{	
@@ -47,33 +38,46 @@ public class VideoCombiner {
 			}
 			combinedVideoNames += ConfigConstants.EDITED_TS_VIDEOS_PATH + "\\" +filteredVideo.getName() + ".ts|";	
 		}
+		System.out.println("combinedVideoNames are: " + combinedVideoNames);
+		String names = "\""+combinedVideoNames+"\"";
+		String command = "ffmpeg.exe" + " -i " + names + " -c" + " copy" + " -bsf:a" +
+				" aac_adtstoasc " + ConfigConstants.COMBINED_VIDEO_PATH + "\\filteredVideo.mp4";
+		
+		
+		
+	
+		ProcessBuilder pb = new ProcessBuilder("ffmpeg.exe", "-i", names, "-c" , "copy", "-bsf:a",
+				"aac_adtstoasc", ConfigConstants.COMBINED_VIDEO_PATH + "\\filteredVideo.mp4");
+		try {
+			
+			pb.redirectErrorStream(true);
+			pb.start();
+			
+			System.out.println(names);
+			System.out.println(command);
+			
+			Runtime.getRuntime().exec(command);
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 
 	}
 	
-	public void checkTsFilesAreExisting() throws IOException
-	{
-		while(true)
-		{
-			if(Files.list(Paths.get("EditedTsVideo")).count() == 4)
-				break;
-			else
-				System.out.println("EditedTsVideo: " + Files.list(Paths.get("EditedTsVideo")).count());	
-		}
-	}
 	
 	public void runCombineProcessBuilder()
 	{
 		
 		String command = "ffmpeg.exe" + "-i" + combinedVideoNames + "-c" + "copy" + "-bsf:a" +
 				"aac_adtstoasc" + ConfigConstants.COMBINED_VIDEO_PATH + "\\filteredVideo.mp4";
-		
-		
-		//ffmpeg -i "concat:EditedTsVideo\\video1496412752319.mp4.ts|EditedTsVideo\\video1496412752320.mp4.ts" -c copy -bsf:a aac_adtstoasc CombinedVideo\\output.mp4
+	
+		String combinedVideoNames = "concat:EditedTsVideo\\video1496737311548.mp4.ts|EditedTsVideo\\video1496737311549.mp4.ts|EditedTsVideo\\video1496737311550.mp4.ts|EditedTsVideo\\video1496737311551.mp4.ts|";
 		
 		ProcessBuilder pb = new ProcessBuilder("ffmpeg.exe", "-i", combinedVideoNames, "-c" , "copy", "-bsf:a",
-				"aac_adtstoasc", "CombinedVideo\\filteredVideo.mp4");
+				"aac_adtstoasc", ConfigConstants.COMBINED_VIDEO_PATH + "\\filteredVideo.mp4");
 		try {
-			System.out.println(combinedVideoNames);
+			System.out.println(command);
 			pb.redirectErrorStream(true);
 			pb.start();
 			
