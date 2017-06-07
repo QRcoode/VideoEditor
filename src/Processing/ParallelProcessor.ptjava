@@ -144,10 +144,11 @@ public class ParallelProcessor extends SwingWorker<Void, Integer> {
 	{
 		try{
 			System.out.println("Start Combining.......");
-			TaskID combined = combine();
-			TaskIDGroup groupCombinedVideo = new TaskIDGroup(1);
-			groupCombinedVideo.add(combined);
-			groupCombinedVideo.waitTillFinished();
+			TaskID id10 = combine();
+			TaskIDGroup gggggggg = new TaskIDGroup(1);
+			gggggggg.add(id10);
+		    
+			gggggggg.waitTillFinished();
 		    
 		    System.out.println("Combine Finished.......");
 		}

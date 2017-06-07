@@ -469,83 +469,83 @@ public class ParallelProcessor extends SwingWorker<Void, Integer> {//####[26]###
     public void __pt__startCombine() {//####[144]####
         try {//####[145]####
             System.out.println("Start Combining.......");//####[146]####
-            TaskID combined = combine();//####[147]####
-            TaskIDGroup groupCombinedVideo = new TaskIDGroup(1);//####[148]####
-            groupCombinedVideo.add(combined);//####[149]####
-            groupCombinedVideo.waitTillFinished();//####[150]####
-            System.out.println("Combine Finished.......");//####[152]####
-        } catch (Exception ee) {//####[154]####
-        }//####[155]####
-    }//####[158]####
-//####[158]####
-//####[160]####
-    private static volatile Method __pt__recordSubVideoNames__method = null;//####[160]####
-    private synchronized static void __pt__recordSubVideoNames__ensureMethodVarSet() {//####[160]####
-        if (__pt__recordSubVideoNames__method == null) {//####[160]####
-            try {//####[160]####
-                __pt__recordSubVideoNames__method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__recordSubVideoNames", new Class[] {//####[160]####
-                    //####[160]####
-                });//####[160]####
-            } catch (Exception e) {//####[160]####
-                e.printStackTrace();//####[160]####
-            }//####[160]####
-        }//####[160]####
-    }//####[160]####
-    public TaskID<Void> recordSubVideoNames() {//####[161]####
-        //-- execute asynchronously by enqueuing onto the taskpool//####[161]####
-        return recordSubVideoNames(new TaskInfo());//####[161]####
-    }//####[161]####
-    public TaskID<Void> recordSubVideoNames(TaskInfo taskinfo) {//####[161]####
-        // ensure Method variable is set//####[161]####
+            TaskID id10 = combine();//####[147]####
+            TaskIDGroup gggggggg = new TaskIDGroup(1);//####[148]####
+            gggggggg.add(id10);//####[149]####
+            gggggggg.waitTillFinished();//####[151]####
+            System.out.println("Combine Finished.......");//####[153]####
+        } catch (Exception ee) {//####[155]####
+        }//####[156]####
+    }//####[159]####
+//####[159]####
+//####[161]####
+    private static volatile Method __pt__recordSubVideoNames__method = null;//####[161]####
+    private synchronized static void __pt__recordSubVideoNames__ensureMethodVarSet() {//####[161]####
         if (__pt__recordSubVideoNames__method == null) {//####[161]####
-            __pt__recordSubVideoNames__ensureMethodVarSet();//####[161]####
+            try {//####[161]####
+                __pt__recordSubVideoNames__method = ParaTaskHelper.getDeclaredMethod(new ParaTaskHelper.ClassGetter().getCurrentClass(), "__pt__recordSubVideoNames", new Class[] {//####[161]####
+                    //####[161]####
+                });//####[161]####
+            } catch (Exception e) {//####[161]####
+                e.printStackTrace();//####[161]####
+            }//####[161]####
         }//####[161]####
-        taskinfo.setParameters();//####[161]####
-        taskinfo.setMethod(__pt__recordSubVideoNames__method);//####[161]####
-        taskinfo.setInstance(this);//####[161]####
-        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[161]####
     }//####[161]####
-    public void __pt__recordSubVideoNames() {//####[161]####
-        try {//####[162]####
-            TaskID id4 = getVideoFiles();//####[163]####
-            TaskIDGroup gg = new TaskIDGroup(1);//####[164]####
-            gg.add(id4);//####[165]####
-            gg.waitTillFinished();//####[166]####
-            System.out.println("** Finished saving files ...");//####[167]####
-        } catch (Exception ee) {//####[169]####
-        }//####[170]####
-    }//####[171]####
-//####[171]####
-//####[174]####
-    @Override//####[174]####
-    protected Void doInBackground() throws Exception {//####[174]####
-        startTime = System.currentTimeMillis();//####[175]####
-        TaskID split = startSpliting(file);//####[176]####
-        split.waitTillFinished();//####[177]####
-        TaskInfo __pt__recordNames = new TaskInfo();//####[179]####
-//####[179]####
-        /*  -- ParaTask dependsOn clause for 'recordNames' -- *///####[179]####
-        __pt__recordNames.addDependsOn(split);//####[179]####
-//####[179]####
-        TaskID recordNames = recordSubVideoNames(__pt__recordNames);//####[179]####
-        recordNames.waitTillFinished();//####[180]####
-        TaskInfo __pt__filtered = new TaskInfo();//####[181]####
-//####[181]####
-        /*  -- ParaTask dependsOn clause for 'filtered' -- *///####[181]####
-        __pt__filtered.addDependsOn(recordNames);//####[181]####
-//####[181]####
-        TaskID filtered = startFiltering(filter, __pt__filtered);//####[181]####
-        filtered.waitTillFinished();//####[182]####
-        TaskInfo __pt__combined = new TaskInfo();//####[183]####
-//####[183]####
-        /*  -- ParaTask dependsOn clause for 'combined' -- *///####[183]####
-        __pt__combined.addDependsOn(filtered);//####[183]####
-//####[183]####
-        TaskID combined = startCombine(__pt__combined);//####[183]####
-        combined.waitTillFinished();//####[184]####
-        long endTime = System.currentTimeMillis();//####[186]####
-        long totalTime = endTime - startTime;//####[187]####
-        System.out.println("Duration: " + totalTime + " ms");//####[188]####
-        return null;//####[190]####
-    }//####[191]####
-}//####[191]####
+    public TaskID<Void> recordSubVideoNames() {//####[162]####
+        //-- execute asynchronously by enqueuing onto the taskpool//####[162]####
+        return recordSubVideoNames(new TaskInfo());//####[162]####
+    }//####[162]####
+    public TaskID<Void> recordSubVideoNames(TaskInfo taskinfo) {//####[162]####
+        // ensure Method variable is set//####[162]####
+        if (__pt__recordSubVideoNames__method == null) {//####[162]####
+            __pt__recordSubVideoNames__ensureMethodVarSet();//####[162]####
+        }//####[162]####
+        taskinfo.setParameters();//####[162]####
+        taskinfo.setMethod(__pt__recordSubVideoNames__method);//####[162]####
+        taskinfo.setInstance(this);//####[162]####
+        return TaskpoolFactory.getTaskpool().enqueue(taskinfo);//####[162]####
+    }//####[162]####
+    public void __pt__recordSubVideoNames() {//####[162]####
+        try {//####[163]####
+            TaskID id4 = getVideoFiles();//####[164]####
+            TaskIDGroup gg = new TaskIDGroup(1);//####[165]####
+            gg.add(id4);//####[166]####
+            gg.waitTillFinished();//####[167]####
+            System.out.println("** Finished saving files ...");//####[168]####
+        } catch (Exception ee) {//####[170]####
+        }//####[171]####
+    }//####[172]####
+//####[172]####
+//####[175]####
+    @Override//####[175]####
+    protected Void doInBackground() throws Exception {//####[175]####
+        startTime = System.currentTimeMillis();//####[176]####
+        TaskID split = startSpliting(file);//####[177]####
+        split.waitTillFinished();//####[178]####
+        TaskInfo __pt__recordNames = new TaskInfo();//####[180]####
+//####[180]####
+        /*  -- ParaTask dependsOn clause for 'recordNames' -- *///####[180]####
+        __pt__recordNames.addDependsOn(split);//####[180]####
+//####[180]####
+        TaskID recordNames = recordSubVideoNames(__pt__recordNames);//####[180]####
+        recordNames.waitTillFinished();//####[181]####
+        TaskInfo __pt__filtered = new TaskInfo();//####[182]####
+//####[182]####
+        /*  -- ParaTask dependsOn clause for 'filtered' -- *///####[182]####
+        __pt__filtered.addDependsOn(recordNames);//####[182]####
+//####[182]####
+        TaskID filtered = startFiltering(filter, __pt__filtered);//####[182]####
+        filtered.waitTillFinished();//####[183]####
+        TaskInfo __pt__combined = new TaskInfo();//####[184]####
+//####[184]####
+        /*  -- ParaTask dependsOn clause for 'combined' -- *///####[184]####
+        __pt__combined.addDependsOn(filtered);//####[184]####
+//####[184]####
+        TaskID combined = startCombine(__pt__combined);//####[184]####
+        combined.waitTillFinished();//####[185]####
+        long endTime = System.currentTimeMillis();//####[187]####
+        long totalTime = endTime - startTime;//####[188]####
+        System.out.println("Duration: " + totalTime + " ms");//####[189]####
+        return null;//####[191]####
+    }//####[192]####
+}//####[192]####
