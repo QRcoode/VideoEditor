@@ -1,37 +1,34 @@
-package Processing;
+package controllers;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 
-import javax.swing.JOptionPane;
-import javax.swing.SwingWorker;
-
+import javax.imageio.ImageIO;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FrameFilter.Exception;
-
 import GUI.UI;
-import Processing.VideoProcessor;
-
 import org.bytedeco.javacpp.avcodec;
 import org.bytedeco.javacv.*;
+import Processing.VideoProcessor;
 
-public class VideoProcessor extends SwingWorker<Void, Integer> {
+public class VideoFilter {
 	
 	private FFmpegFrameFilter filter;
 	private FFmpegFrameRecorder videoRecorder;
 	private FFmpegFrameGrabber videoGrab;
+	private String filtertype;
 	private File Directory;
 	private File video;
 	private String ext;
 	private Long startTime;
+	private int id;
 	private UI ui;
-	public String path;
-	public int id;
-	public boolean done = false;
-	private long time;
     
-	public VideoProcessor(String filename, UI ui, int id) {
+	public VideoFilter(String filename, UI ui, int id) {
+		this.id = id;
 		this.ui = ui;
-		this.id= id;
 		video = new File(filename);
 		videoGrab = new FFmpegFrameGrabber(video.getAbsolutePath());
 		ext = getFileExtension(filename);
@@ -43,15 +40,27 @@ public class VideoProcessor extends SwingWorker<Void, Integer> {
 		getDirectory();
 	}
 	
+	public void getVideoFiles()
+	{
+		File[] listOfFiles = new File("SubVideos").listFiles();
+		ArrayList<String> videoNames = new ArrayList<String>();
+		for(File listOfFile : listOfFiles){
+			if (listOfFile.isFile()) 
+			{
+				System.out.println(listOfFile.getName());
+		        videoNames.add(listOfFile.getName());
+			} 
+		}
+	}
+	
 	private void getDirectory() {
-		Directory = new File(System.getProperty("user.dir") + "/Edited Video/");
+		Directory = new File(System.getProperty("user.dir") + "/EditedSubVideo/");
         if (!Directory.exists()) {
             Directory.mkdirs();
         }
-	}
-	
-	public File getFile() {
-		 return new File(path);
+        for(File file: Directory.listFiles()) 
+            if (!file.isDirectory())
+                file.delete();
 	}
 	
 	public void initializeFilter(String Filter) {
@@ -88,53 +97,15 @@ public class VideoProcessor extends SwingWorker<Void, Integer> {
 		}
 		return extension;
 	}
-		
-	@Override
-	protected Void doInBackground() throws Exception {
-		start();
-		checkDone();
-		return null;
-	}
-	
-	@Override
-	protected void done() {
-		while(!done);
-		if (ui.cancelled) {
-			File output = new File(path);
-			output.delete();
-		} else {
-			if (ui.progressBars.size() <= id) {
-				ui.progressBars.remove(0);
-				ui.processingInfo.remove(0);
-			} else {
-				ui.progressBars.remove(id);
-				ui.processingInfo.remove(id);
-			}
-			ui.processors.remove(this);
-			ui.updateProcessing();
-			if (ui.progressBars.size() == 0) {
-				ui.updateLabel("");
-			}
-		}
-	}
 
 	public void start() {
 		Frame frame;
 		try {
 			System.out.println("Starting to process video: " + video.getName() + ".....");
-            path = Directory + "/" + ui.outputVideo + "." + ext;
-            initVideoRecorder(path);    
+            String path = Directory + "/edited_sub_video" + Thread.currentThread().getId() + "." + ext;
+            initVideoRecorder(path);
             
-            startTime = System.currentTimeMillis();
-            
-            int count = 0;
-            int progress = 0;
-            int frames = videoGrab.getLengthInFrames();
-            System.out.println("There are " + frames + " frames in this video");
             while (videoGrab.grab() != null) {
-            	if (ui.cancelled) {
-            		break;
-            	}
                 frame = videoGrab.grabImage();
               
                 if (frame != null) {
@@ -144,24 +115,15 @@ public class VideoProcessor extends SwingWorker<Void, Integer> {
                     videoRecorder.setTimestamp(videoGrab.getTimestamp());
                     videoRecorder.record(filterFrame, videoGrab.getPixelFormat());
                 }
-                count++;
-                if (count % (frames/100) == 0) {
-                	progress++;
-                	ui.progressBars.get(id).setValue(progress);
-                }
             }
-            if (!ui.cancelled) {ui.progressBars.get(id).setValue(100);}
             filter.stop();
-            filter.release();
             videoRecorder.stop();
             videoRecorder.release();
             videoGrab.stop();
             videoGrab.release();
             System.out.println("Finished processing video: " + video.getName() + ".....");
-            long currentThreadID = Thread.currentThread().getId();
-    	    System.out.println("-- Thread "+currentThreadID+ " finished processing video: " + video.getName());
-    	    done = true;
-    	    time = System.currentTimeMillis() - startTime;
+            
+
         } catch (FrameGrabber.Exception e) {
             e.printStackTrace();
         } catch (FrameRecorder.Exception e) {
@@ -171,32 +133,13 @@ public class VideoProcessor extends SwingWorker<Void, Integer> {
         }
 	}
 	
-	public void checkDone() {
-		if (!ui.cancelled) {
-			System.out.println("Video filtering for video "+id+" took " + (time/1000) + " seconds.");
-			JOptionPane.showMessageDialog(ui, "Finished Saving Video: "+id+"\nTime taken: " + (time/1000) + " seconds.");
-			System.out.println(id);
-		}
-		boolean done = true;
-		boolean finished = false;
-		while(!finished) {
-			for (int i=0; i < ui.processors.size(); i++) {
-				if (!ui.processors.get(i).done) {
-					done = false;
-				}
-			}
-			if (done == true) { finished = true; }
-		}
-	}
-	
-	public static void performIO(int i) {
-		try {
-			Thread.sleep(i);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	    long currentThreadID = Thread.currentThread().getId();
-	    System.out.println("** Thread "+currentThreadID+ " finished IO("+i+")"); 
+	public void excute()
+	{
+		long startTime = System.currentTimeMillis();
+		start();
+		long endTime   = System.currentTimeMillis();
+		long totalTime = endTime - startTime;
+		System.out.println("Duration: " + totalTime + " ms");
 	}
 	
 }

@@ -11,7 +11,13 @@ import constants.ConfigConstants;
 public class VideoCombiner {
 	
 	private String combinedVideoNames = "concat:";
-
+	private int id;
+	private String output;
+	
+	public VideoCombiner(String output, int id) {
+		this.output = output;
+		this.id = id;
+	}
 	
 	public void combine()
 	{
@@ -26,11 +32,14 @@ public class VideoCombiner {
 	
 	public void convertVideoToTsFormat() throws IOException
 	{
-		File[] filteredVideos = new File("EditedVideo").listFiles();		
+		File[] filteredVideos = new File("EditedSubVideo").listFiles();	
+		
+		checkTsFilesAreExisting();
+		
 		for(File filteredVideo: filteredVideos) 
 		{	
 			try {
-				String command = "ffmpeg -i " + "EditedVideo\\" + filteredVideo.getName()
+				String command = "ffmpeg -i " + "EditedSubVideo\\" + filteredVideo.getName()
 				+ " -c copy -bsf:v h264_mp4toannexb -f mpegts "+ "EditedTsVideo\\" + filteredVideo.getName() + ".ts";
 				Runtime.getRuntime().exec(command);
 			} catch (IOException e) {
@@ -43,9 +52,12 @@ public class VideoCombiner {
 		String command = "ffmpeg.exe" + " -i " + names + " -c" + " copy" + " -bsf:a" +
 				" aac_adtstoasc " + ConfigConstants.COMBINED_VIDEO_PATH + "\\filteredVideo.mp4";
 		
+		System.out.println(names);
+		System.out.println(command);
 		
+		System.out.println("output " + output);
 		
-	
+		Runtime.getRuntime().exec(command);
 		ProcessBuilder pb = new ProcessBuilder("ffmpeg.exe", "-i", names, "-c" , "copy", "-bsf:a",
 				"aac_adtstoasc", ConfigConstants.COMBINED_VIDEO_PATH + "\\filteredVideo.mp4");
 		try {
@@ -53,10 +65,9 @@ public class VideoCombiner {
 			pb.redirectErrorStream(true);
 			pb.start();
 			
-			System.out.println(names);
-			System.out.println(command);
 			
-			Runtime.getRuntime().exec(command);
+			
+			
 			
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -65,19 +76,32 @@ public class VideoCombiner {
 
 	}
 	
+	public void checkTsFilesAreExisting() throws IOException
+	{
+		while(true)
+		{
+			if(Files.list(Paths.get("EditedSubVideo")).count() == Runtime.getRuntime().availableProcessors())
+				break;
+			else
+				System.out.println("EditedSubVideo: " + Files.list(Paths.get("EditedSubVideo")).count());	
+		}
+	}
 	
 	public void runCombineProcessBuilder()
 	{
 		
+		File directory = new File("EEditedSubVideo");
+		 if (!directory.exists()) {
+			 directory.mkdirs();
+	     }
+		
 		String command = "ffmpeg.exe" + "-i" + combinedVideoNames + "-c" + "copy" + "-bsf:a" +
 				"aac_adtstoasc" + ConfigConstants.COMBINED_VIDEO_PATH + "\\filteredVideo.mp4";
-	
-		String combinedVideoNames = "concat:EditedTsVideo\\video1496737311548.mp4.ts|EditedTsVideo\\video1496737311549.mp4.ts|EditedTsVideo\\video1496737311550.mp4.ts|EditedTsVideo\\video1496737311551.mp4.ts|";
 		
 		ProcessBuilder pb = new ProcessBuilder("ffmpeg.exe", "-i", combinedVideoNames, "-c" , "copy", "-bsf:a",
-				"aac_adtstoasc", ConfigConstants.COMBINED_VIDEO_PATH + "\\filteredVideo.mp4");
+				"aac_adtstoasc", "Edited Video\\"+output);
 		try {
-			System.out.println(command);
+			System.out.println(combinedVideoNames);
 			pb.redirectErrorStream(true);
 			pb.start();
 			
@@ -85,11 +109,4 @@ public class VideoCombiner {
 			e.printStackTrace();
 		}
 	}
-	
-	
-	
-	
-	
-
-	
 }

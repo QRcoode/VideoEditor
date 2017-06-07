@@ -24,14 +24,18 @@ import org.bytedeco.javacv.FrameFilter.Exception;
 public class VideoSpliter {
 	
 	private File file;
+	private int id;
 	
-	
-	public VideoSpliter(String originalVideoPath)
+	public VideoSpliter(String originalVideoPath, int id)
 	{
+		this.id = id;
 		File directory = new File(System.getProperty("user.dir") + "/SubVideos/");
         if (!directory.exists()) {
         	directory.mkdirs();
         }
+        for(File file: directory.listFiles()) 
+            if (!file.isDirectory())
+                file.delete();
         file = new File(originalVideoPath);
 	}
 	
@@ -54,7 +58,7 @@ public class VideoSpliter {
             InputStream inputStream = new FileInputStream(file);
             OutputStream outputStream = new FileOutputStream(videoFile);
             System.out.println("File Created Location: "+ videoFile);
-            int totalPartsToSplit = 4;// Total files to split.
+            int totalPartsToSplit = Runtime.getRuntime().availableProcessors();// Total files to split.
             int splitSize = inputStream.available() / totalPartsToSplit;
             int streamSize = 0;
             int read = 0;
@@ -124,9 +128,10 @@ public class VideoSpliter {
 		for(int i = 0; i < numberOfPartitions; i ++)
 		{
 			String oriTime = transferMsToDuration(partitionedInMs * i);
-			String commandLine = "ffmpeg.exe -i mv.mp4 -ss " + oriTime + " -c copy -t "+ partitionedDur +" SubVideos\\splited_video_"+ i +".mp4";
+			String commandLine = "ffmpeg.exe -i "+file.getName()+" -ss " + oriTime + " -c copy -t "+ partitionedDur +" SubVideos\\sub_video_"+ i +".mp4";
 			
 			list.add(commandLine);
+			System.out.println(commandLine);
 		}
 		return list;
 	}
@@ -147,5 +152,4 @@ public class VideoSpliter {
 			e.printStackTrace();
 		}
 	}
-
 }
